@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>城市选择</title>
+	<link rel="stylesheet" href="./city.css">
+
+	<script src="./jquery-3.2.1.js"></script>
+	<script src="./citydata.js"></script>
+
+</head>
+<body>
+    <!-- 城市列表 -->
+  <div class="cityPage">
+    <div class="cityContent">
+      <div class="inputBox">
+        <input type="text" placeholder="输入城市名称" id="findcityInp">
+      </div>
+      <div class="localCity">定位城市</div>
+      <div class="cityname" >广州市</div>
+    </div>
+    <div id='list'>
+      <section id="sectionBox"></section>
+      <nav id="navBar"></nav>
+    </div>
+    <div class="letterBox"></div>
+  </div>
+  <script>
+
+   $(function(){
+	
+        initCities(cityData)
+ 
+	   //根据cityCode查询城市
+	   function findCityCode(cityCode,cityData){
+		var localCity = null;
+		  for(var i = 0; i < cityData.length;i++){
+			  for(var j =0; j < cityData[i].cities.length; j++){
+
+				  if(cityData[i].cities[j].cityid == cityCode){
+					localCity = cityData[i].cities[j].name
+				  }
+			  }
+		  }
+		  return localCity;
+	   }
+     //	城市列表初始化
+     function initCities(cityData) {
+		var g = "";
+		$('section').html('');
+		$('nav').html('')
+		cityData.forEach(function(item, index) {
+			g += "<dl id=" + item.name + "><dt>" + item.name + "</dt>";
+			item.cities.forEach(function(citiesItem, citiesIndex){
+				g += "<dd data-id=" + citiesItem.cityid + " data-name=" + citiesItem.name + " class='list' onclick=clickAction(this);>" + citiesItem.name + "</dd>"
+			})
+			g += "</dl>"
+		})
+		$('section').append(g);
+
+		var g = $('nav').height() / 26;
+		var f = '';
+                for(var i =0;i<cityData.length;i++){
+                      f+="<div onclick='toTarget(this);'>"+cityData[i].name+"</div>"
+                  }
+		$('nav').append(f);
+    }
+    
+	//输入城市查询
+	var key = false;
+	$('#findcityInp').on('compositionstart', function () {
+		key = true;
+		console.log('不搜索')
+	});
+	$('#findcityInp').on('compositionend', function (e) {
+		var keyWord = $.trim(e.target.value);
+		if(keyWord.length>0){
+			var result = findCity(keyWord, cityData);
+			console.log(result)
+			initCities(result);
+		}else{
+			initCities(cityData);
+		}
+	});
+
+	$('#findcityInp').on('input', function (e) {
+		var keyWord = $.trim(e.target.value);
+		var result = findCity(keyWord, cityData);
+		console.log(result)
+		initCities(result)
+	});
+	//城市查询
+	function findCity(keyWord, data) {
+		if (!(data instanceof Array)) return;
+
+		var reg = new RegExp(keyWord);
+		var arr = [];
+		var obj ={
+				name:'',
+				cities:[]
+		}
+		if(keyWord.length>0 && checkCh(keyWord)==false){
+			data.forEach(function(item, index) {
+				item.cities.forEach(function(childItem, childIndex) {
+					if (childItem.tags.match(reg)) {
+						obj.name = childItem.tags[0];
+						obj.cities.push(childItem)
+						arr=[obj]
+					}
+				})
+			})
+		}else if(keyWord.length ==1 && checkCh(keyWord)==true){
+			data.forEach(function(item,index){
+				if(item.name == keyWord){
+					// console.log(item)
+					arr.push(item)
+				}
+			})
+		}
+		else{
+			arr = data
+		}
+		return arr;
+	}
+	function checkCh(str){
+		var RegExp = /^[a-zA-Z]{1}$/;
+		return RegExp.test(str);       
+	}
+      });
+       //点击右边描点
+function toTarget(tag){
+	var text = $(tag).text();
+	
+	//location.href = "#"+text;
+	document.getElementById(text).scrollIntoView();
+
+	$('.letterBox').html(text);
+	$('.letterBox').show()
+	setTimeout(function(){
+		$('.letterBox').hide()
+	},1000)
+}
+function clickAction(tag){
+	var chooseCityCode = $(tag).attr('data-id');
+	var cityName = $(tag).attr('data-name');
+	console.log(chooseCityCode ,cityName);
+    //window.location.href = '<%=basePath %>myIndex.action?mySeqNoKey=${mySeqNoKey}&version=${version}&cityCode=' + chooseCityCode + '&firstCityCode=${firstCityCode}';
+}
+
+
+
+  </script>
+</body>
+</html>
